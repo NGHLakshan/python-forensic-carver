@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- SECURITY: No external resources. Token injected by server. -->
+    <title>🔎 Python Forensic Tool</title>
+    <style>
+        :root {
+            --bg: #0d1117;
+            --card-bg: #161b22;
+            --border: #30363d;
+            --text: #c9d1d9;
+            --text-muted: #8b949e;
+            --accent: #58a6ff;
+            --accent-glow: rgba(88, 166, 255, 0.2);
+            --success: #3fb950;
+            --error: #f85149;
+            --warning: #d29922;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, 'Segoe UI', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.5;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            padding: 1rem 2rem;
+            background: var(--card-bg);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+        }
+
+        .badge {
+            font-size: .75rem;
+            color: var(--text-muted);
+            background: rgba(255, 255, 255, .05);
+            padding: 2px 8px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .secure-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--success);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1
+            }
+
+            50% {
+                opacity: .4
+            }
+        }
+
+        main {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            padding: 1.5rem;
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            overflow-y: auto;
+        }
+
+        .section-label {
+            font-size: .75rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: .05em;
+            margin-bottom: .75rem;
+        }
+
+        .drive-selector {
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+        }
+
+        select,
+        input {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: .5rem;
+            border-radius: 6px;
+            font-family: inherit;
+        }
+
+        .drive-input {
+            width: 60px;
+            text-align: center;
+            font-weight: 700;
+            font-size: 1.2rem;
+            text-transform: uppercase;
+            color: var(--accent);
+        }
+
+        .carver-list {
+            display: flex;
+            flex-direction: column;
+            gap: .5rem;
+        }
+
+        .carver-item {
+            display: flex;
+            align-items: center;
+            gap: .75rem;
+            padding: .5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background .2s;
+        }
+
+        .carver-item:hover {
+            background: rgba(255, 255, 255, .05);
+        }
+
+        .carver-item input {
+            cursor: pointer;
+        }
+
+        .carver-info {
+            flex: 1;
+            font-size: .9rem;
+        }
+
+        .actions {
+            margin-top: auto;
+            display: flex;
+            flex-direction: column;
+            gap: .75rem;
+        }
+
+        button {
+            padding: .75rem;
+            border-radius: 6px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all .2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: .5rem;
+        }
+
+        .btn-start {
+            background: var(--accent);
+            color: #000;
+        }
+
+        .btn-start:hover {
+            opacity: .9;
+            box-shadow: 0 0 15px var(--accent-glow);
+        }
+
+        .btn-stop {
+            background: var(--error);
+            color: #fff;
+            display: none;
+        }
+
+        .content {
+            display: flex;
+            flex-direction: column;
+            padding: 1.5rem;
+            gap: 1.5rem;
+            overflow: hidden;
+        }
+
+        .status-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.25rem;
+        }
+
+        .progress-container {
+            height: 8px;
+            background: var(--bg);
+            border-radius: 4px;
+            margin: 1rem 0;
+            overflow: hidden;
+            display: none;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: var(--accent);
+            width: 0%;
+            transition: width .3s;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .stat-item {
+            background: var(--bg);
+            padding: .75rem;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--success);
+        }
+
+        .stat-label {
+            font-size: .7rem;
+            color: var(--text-muted);
+            margin-top: .25rem;
+        }
+
+        .log-container {
+            flex: 1;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .log-header {
+            padding: .75rem 1.25rem;
+            background: var(--card-bg);
+            border-bottom: 1px solid var(--border);
+            font-size: .8rem;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        #logs {
+            flex: 1;
+            padding: 1rem;
+            font-family: 'Cascadia Code', 'Consolas', 'Courier New', monospace;
+            font-size: .8rem;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+
+        .log-line {
+            margin-bottom: .2rem;
+            display: flex;
+            gap: .75rem;
+        }
+
+        .log-ts {
+            color: var(--text-muted);
+            min-width: 65px;
+        }
+
+        .log-tag-ok {
+            color: var(--success);
+        }
+
+        .log-tag-err {
+            color: var(--error);
+        }
+
+        .log-tag-info {
+            color: var(--accent);
+        }
+
+        .log-tag-warn {
+            color: var(--warning);
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="header-title"><span>🔎</span> Python Forensic Recovery Tool</div>
+        <div class="badge"><span class="secure-dot"></span> Secure · Local Session · Admin Mode</div>
+    </header>
+    <main>
+        <div class="sidebar">
+            <div>
+                <div class="section-label">Drive Configuration</div>
+                <div class="drive-selector">
+                    <input type="text" id="driveLetter" class="drive-input" value="E" maxlength="1">
+                    <span>Drive letter</span>
+                </div>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
+                <div class="section-label" style="display:flex;justify-content:space-between;align-items:center;">
+                    File Types
+                    <div style="font-size:.7rem;">
+                        <span id="selectAll" style="color:var(--accent);cursor:pointer;">All</span> |
+                        <span id="selectNone" style="color:var(--text-muted);cursor:pointer;">None</span>
+                    </div>
+                </div>
+                <div id="carverList" class="carver-list" style="overflow-y:auto;"></div>
+            </div>
+            <div class="actions">
+                <button id="startBtn" class="btn-start">▶ START SCAN</button>
+                <button id="stopBtn" class="btn-stop">⏹ STOP SCAN</button>
+            </div>
+        </div>
+        <div class="content">
+            <div class="status-card">
+                <div id="statusText" style="font-size:.9rem;font-weight:500;">Ready to scan</div>
+                <div id="progressContainer" class="progress-container">
+                    <div id="progressBar" class="progress-bar"></div>
+                </div>
+                <div id="statsGrid" class="stats-grid"></div>
+            </div>
+            <div class="log-container">
+                <div class="log-header">Live Forensic Log</div>
+                <div id="logs"></div>
+            </div>
+        </div>
+    </main>
+    <script>
+        const SESSION_TOKEN = "__SESSION_TOKEN__";
+
+        function secureFetch(url, options = {}) {
+            const sep = url.includes("?") ? "&" : "?";
+            return fetch(`${url}${sep}token=${SESSION_TOKEN}`, options);
+        }
+        function secureEventSource(url) {
+            const sep = url.includes("?") ? "&" : "?";
+            return new EventSource(`${url}${sep}token=${SESSION_TOKEN}`);
+        }
+
+        const el = {
+            carverList: document.getElementById('carverList'),
+            driveLetter: document.getElementById('driveLetter'),
+            startBtn: document.getElementById('startBtn'),
+            stopBtn: document.getElementById('stopBtn'),
+            statusText: document.getElementById('statusText'),
+            progressBar: document.getElementById('progressBar'),
+            progressContainer: document.getElementById('progressContainer'),
+            statsGrid: document.getElementById('statsGrid'),
+            logs: document.getElementById('logs'),
+            selectAll: document.getElementById('selectAll'),
+            selectNone: document.getElementById('selectNone')
+        };
+
+        let carvers = [], running = false, eventSource = null;
+
+        async function fetchCarvers() {
+            try {
+                const res = await secureFetch('/api/carvers');
+                carvers = (await res.json()).carvers;
+                el.carverList.innerHTML = carvers.map(c => `
+                    <label class="carver-item">
+                        <input type="checkbox" name="carver" value="${c.label}" checked>
+                        <div class="carver-info"><span>${c.icon}</span> ${c.label}</div>
+                    </label>`).join('');
+            } catch { log('Failed to fetch carver modules', 'err'); }
+        }
+
+        el.selectAll.onclick = () => document.querySelectorAll('input[name="carver"]').forEach(c => c.checked = true);
+        el.selectNone.onclick = () => document.querySelectorAll('input[name="carver"]').forEach(c => c.checked = false);
+
+        function log(msg, tag = 'default', ts = new Date().toLocaleTimeString()) {
+            const div = document.createElement('div');
+            div.className = 'log-line';
+            div.innerHTML = `<span class="log-ts">${ts}</span><span class="log-tag-${tag}">${msg}</span>`;
+            el.logs.appendChild(div);
+            el.logs.scrollTop = el.logs.scrollHeight;
+        }
+
+        async function startScan() {
+            const drive = el.driveLetter.value.trim();
+            const selected = [...document.querySelectorAll('input[name="carver"]:checked')].map(c => c.value);
+            if (!drive) return alert('Enter drive letter');
+            if (!selected.length) return alert('Select at least one file type');
+            const res = await secureFetch('/api/scan/start', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-Forensic-Token': SESSION_TOKEN },
+                body: JSON.stringify({ drive, selected })
+            });
+            if (res.ok) {
+                running = true;
+                el.startBtn.style.display = 'none'; el.stopBtn.style.display = 'flex';
+                el.statusText.innerText = `Scanning drive ${drive}: ...`;
+                el.progressContainer.style.display = 'block';
+                el.progressBar.style.width = '100%';
+                el.logs.innerHTML = '';
+                initSSE();
+            } else { alert((await res.json()).error || 'Failed to start scan'); }
+        }
+
+        async function stopScan() {
+            await secureFetch('/api/scan/stop', { method: 'POST', headers: { 'X-Forensic-Token': SESSION_TOKEN } });
+        }
+
+        function initSSE() {
+            if (eventSource) eventSource.close();
+            eventSource = secureEventSource('/api/scan/logs');
+            eventSource.onmessage = (e) => {
+                const data = JSON.parse(e.data);
+                if (data.msg === "__DONE__") finishScan();
+                else { log(data.msg, data.tag, data.ts); updateStats(); }
+            };
+            eventSource.onerror = () => eventSource.close();
+        }
+
+        async function updateStats() {
+            const data = await (await secureFetch('/api/scan/status')).json();
+            el.statsGrid.innerHTML = Object.entries(data.counts).map(([label, count]) =>
+                `<div class="stat-item"><div class="stat-value">${count}</div><div class="stat-label">${label}</div></div>`
+            ).join('');
+            if (!data.running && running) finishScan();
+        }
+
+        function finishScan() {
+            running = false;
+            el.startBtn.style.display = 'flex'; el.stopBtn.style.display = 'none';
+            el.statusText.innerText = 'Scan Complete';
+            el.progressBar.style.width = '100%';
+            if (eventSource) eventSource.close();
+        }
+
+        el.startBtn.onclick = startScan;
+        el.stopBtn.onclick = stopScan;
+        fetchCarvers();
+        setInterval(() => { if (running) updateStats(); }, 2000);
+    </script>
+</body>
+
+</html>
