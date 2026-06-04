@@ -78,8 +78,8 @@ def main():
     print("3. Starting Smart JPEG Carver Scan (PhotoRec-style: structure-aware)...")
     file_count = 0
 
-    CHUNK_SIZE = 10 * 1024 * 1024  # 10MB chunks
-    OVERLAP    =  5 * 1024 * 1024  # 5MB overlap to catch files crossing boundaries
+    CHUNK_SIZE = 64 * 1024 * 1024  # 64MB chunks — fewer I/O calls = faster
+    OVERLAP    =  2 * 1024 * 1024  # 2MB overlap — enough to catch any cross-boundary header
     offset = 0
 
     try:

@@ -2,8 +2,8 @@ import os
 import struct
 
 DRIVE_LETTER = 'E'
-CHUNK_SIZE = 50 * 1024 * 1024
-OVERLAP = 15 * 1024 * 1024
+CHUNK_SIZE = 64 * 1024 * 1024
+OVERLAP    =  2 * 1024 * 1024
 MP4_MAX_SIZE = 250 * 1024 * 1024 # extract up to 250MB for video files
 
 def is_valid_mp4(data, idx):

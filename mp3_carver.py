@@ -2,8 +2,8 @@ import os
 import re
 
 DRIVE_LETTER = 'E'
-CHUNK_SIZE = 50 * 1024 * 1024  
-OVERLAP = 15 * 1024 * 1024
+CHUNK_SIZE = 64 * 1024 * 1024  
+OVERLAP    =  2 * 1024 * 1024
 MP3_MAX_SIZE = 15 * 1024 * 1024  # 15MB cap for MP3 (most songs are 3-8MB)
 
 # Pre-compile the regex to search for MP3 headers rapidly

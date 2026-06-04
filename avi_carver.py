@@ -3,8 +3,8 @@ import struct
 
 # ⚠️ Set your USB drive letter here
 DRIVE_LETTER = 'E'
-CHUNK_SIZE = 50 * 1024 * 1024   # 50MB chunks
-OVERLAP    = 10 * 1024 * 1024   # 10MB overlap
+CHUNK_SIZE = 64 * 1024 * 1024   # 64MB chunks
+OVERLAP    =  2 * 1024 * 1024   # 2MB overlap
 AVI_MAX_SIZE = 2 * 1024 * 1024 * 1024  # 2GB cap
 
 

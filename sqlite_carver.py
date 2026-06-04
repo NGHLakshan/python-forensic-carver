@@ -2,8 +2,8 @@ import os
 import struct
 
 DRIVE_LETTER = 'E'
-CHUNK_SIZE = 50 * 1024 * 1024
-OVERLAP = 5 * 1024 * 1024
+CHUNK_SIZE = 64 * 1024 * 1024
+OVERLAP    =  2 * 1024 * 1024
 
 def get_sqlite_size(data, idx):
     if idx + 32 > len(data):

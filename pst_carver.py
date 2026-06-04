@@ -3,8 +3,8 @@ import struct
 
 # ⚠️ Set your USB drive letter here
 DRIVE_LETTER = 'E'
-CHUNK_SIZE = 50 * 1024 * 1024
-OVERLAP    = 10 * 1024 * 1024
+CHUNK_SIZE = 64 * 1024 * 1024
+OVERLAP    =  2 * 1024 * 1024
 PST_MAX_SIZE = 50 * 1024 * 1024 * 1024  # 50GB cap (PST files can be huge)
 
 # PST/OST magic bytes

@@ -3,8 +3,8 @@ import struct
 
 # ⚠️ Set your USB drive letter here
 DRIVE_LETTER = 'E'
-CHUNK_SIZE = 50 * 1024 * 1024
-OVERLAP    = 10 * 1024 * 1024
+CHUNK_SIZE = 64 * 1024 * 1024
+OVERLAP    =  2 * 1024 * 1024
 
 # ISO 9660: Primary Volume Descriptor starts at sector 16 (offset 32768)
 # Signature bytes at offset 1 within PVD: \x01CD001\x01

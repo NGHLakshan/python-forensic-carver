@@ -1,8 +1,8 @@
 import os
 
 DRIVE_LETTER = 'E'
-CHUNK_SIZE = 50 * 1024 * 1024
-OVERLAP = 20 * 1024 * 1024
+CHUNK_SIZE = 64 * 1024 * 1024
+OVERLAP    =  2 * 1024 * 1024
 RAR_MAX_SIZE = 500 * 1024 * 1024 # Extract up to 500MB
 
 def main():

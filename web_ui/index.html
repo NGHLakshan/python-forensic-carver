@@ -323,13 +323,26 @@
     </header>
     <main>
         <div class="sidebar">
-            <div>
+            <div style="margin-bottom: 1rem;">
                 <div class="section-label">Drive Configuration</div>
                 <div class="drive-selector">
                     <input type="text" id="driveLetter" class="drive-input" value="E" maxlength="1">
                     <span>Drive letter</span>
                 </div>
             </div>
+
+            <div style="margin-bottom: 1rem;">
+                <div class="section-label">Save Location (Optional)</div>
+                <div style="display:flex; flex-direction:column; gap:0.5rem;">
+                    <button id="browseBtn" type="button"
+                        style="padding: 0.6rem; background: var(--card-bg); border: 1px solid var(--border); color: var(--text); border-radius: 6px; font-weight: 600; cursor: pointer; transition: 0.2s;">📁
+                        Choose Save Folder...</button>
+                    <input type="text" id="outputFolder"
+                        style="padding: 0.5rem; background: var(--bg); border: 1px solid var(--border); color: var(--text); border-radius: 6px; font-size: 0.75rem;"
+                        placeholder="Leave empty for default folder">
+                </div>
+            </div>
+
             <div style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
                 <div class="section-label" style="display:flex;justify-content:space-between;align-items:center;">
                     File Types
@@ -374,6 +387,8 @@
         const el = {
             carverList: document.getElementById('carverList'),
             driveLetter: document.getElementById('driveLetter'),
+            outputFolder: document.getElementById('outputFolder'),
+            browseBtn: document.getElementById('browseBtn'),
             startBtn: document.getElementById('startBtn'),
             stopBtn: document.getElementById('stopBtn'),
             statusText: document.getElementById('statusText'),
@@ -386,6 +401,22 @@
         };
 
         let carvers = [], running = false, eventSource = null;
+
+        el.browseBtn.onclick = async () => {
+            el.browseBtn.disabled = true;
+            try {
+                const res = await secureFetch('/api/select_folder', { method: 'POST' });
+                const data = await res.json();
+                if (data.folder) {
+                    el.outputFolder.value = data.folder;
+                } else if (data.error) {
+                    console.error("Folder selection error:", data.error);
+                }
+            } catch (err) {
+                console.error(err);
+            }
+            el.browseBtn.disabled = false;
+        };
 
         async function fetchCarvers() {
             try {
@@ -412,14 +443,18 @@
 
         async function startScan() {
             const drive = el.driveLetter.value.trim();
+            const output_folder = el.outputFolder.value.trim();
             const selected = [...document.querySelectorAll('input[name="carver"]:checked')].map(c => c.value);
+
             if (!drive) return alert('Enter drive letter');
             if (!selected.length) return alert('Select at least one file type');
+
             const res = await secureFetch('/api/scan/start', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'X-Forensic-Token': SESSION_TOKEN },
-                body: JSON.stringify({ drive, selected })
+                body: JSON.stringify({ drive, selected, output_folder })
             });
+
             if (res.ok) {
                 running = true;
                 el.startBtn.style.display = 'none'; el.stopBtn.style.display = 'flex';
@@ -457,7 +492,7 @@
         function finishScan() {
             running = false;
             el.startBtn.style.display = 'flex'; el.stopBtn.style.display = 'none';
-            el.statusText.innerText = 'Scan Complete';
+            el.statusText.innerText = 'Scan Complete!';
             el.progressBar.style.width = '100%';
             if (eventSource) eventSource.close();
         }

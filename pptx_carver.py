@@ -67,8 +67,8 @@ def main():
 
     print("3. Starting Strict PPTX Carver Scan...")
     
-    CHUNK_SIZE = 15 * 1024 * 1024  # 15MB chunks
-    OVERLAP = 5 * 1024 * 1024      # 5MB Overlap
+    CHUNK_SIZE = 64 * 1024 * 1024  # 64MB chunks
+    OVERLAP    =  2 * 1024 * 1024  # 2MB overlap
     offset = 0
     
     file_count = 0

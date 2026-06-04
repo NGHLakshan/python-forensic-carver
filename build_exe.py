@@ -23,7 +23,7 @@ add_data_path = f"web_ui{os.pathsep}web_ui"
 
 cmd = [
     sys.executable, "-m", "PyInstaller",
-    "--name", "PythonForensicTool",
+    "--name", "PythonForensicTool_v2",
     "--add-data", add_data_path,
     "--onefile",        # Single standalone EXE
     "--uac-admin",      # Request Administrator on launch

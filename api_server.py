@@ -101,7 +101,11 @@ def index():
     with open(html_path, "r", encoding="utf-8") as f:
         html = f.read()
     html = html.replace("__SESSION_TOKEN__", _SECRET_TOKEN)
-    return html, 200, {"Content-Type": "text/html; charset=utf-8"}
+    response = Response(html, mimetype="text/html")
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    return response
 
 
 @app.route("/api/carvers", methods=["GET"])
@@ -115,18 +119,49 @@ def get_carvers():
     })
 
 
+@app.route("/api/select_folder", methods=["POST"])
+def select_folder():
+    import webview
+    try:
+        if not webview.windows:
+            raise Exception("No active webview window found.")
+        window = webview.windows[0]
+        folders = window.create_file_dialog(webview.FOLDER_DIALOG)
+        
+        dest_folder = folders[0] if folders and len(folders) > 0 else ""
+        return jsonify({"folder": dest_folder})
+    except Exception as e:
+        _push_log(f"[!] Target folder selection error: {e}", "err")
+        return jsonify({"error": str(e)}), 500
+
+
 @app.route("/api/scan/start", methods=["POST"])
 def start_scan():
     if _scan_state["running"]:
         return jsonify({"error": "Scan already running"}), 409
+        
     data = request.get_json(force=True)
     drive = data.get("drive", "").strip().upper()
+    output_folder = data.get("output_folder", "").strip()
     selected_labels = data.get("selected", [])
+    
     if not drive or len(drive) != 1 or not drive.isalpha():
         return jsonify({"error": "Invalid drive letter"}), 400
     if not selected_labels:
         return jsonify({"error": "No file types selected"}), 400
+        
     selected = [(lbl, CARVERS[lbl]["module"]) for lbl in selected_labels if lbl in CARVERS]
+    
+    # ── Override Working Directory before starting scripts ──
+    if output_folder and os.path.exists(output_folder):
+        os.chdir(output_folder)
+        _push_log(f"[*] Output directory set to: {output_folder}", "info")
+    else:
+        # Revert to standard app directory if empty/invalid
+        os.chdir(base_dir)
+        if output_folder:
+            _push_log(f"[!] Warning: Folder {output_folder} invalid. Using default.", "warn")
+
     _scan_state.update({
         "running": True, "drive": drive, "selected": selected,
         "counts": {lbl: 0 for lbl, _ in selected}, "threads": []
@@ -229,7 +264,7 @@ def _start_flask():
 if __name__ == "__main__":
     import webview
 
-    url = f"http://127.0.0.1:5000/?token={_SECRET_TOKEN}"
+    url = f"http://127.0.0.1:5000/?token={_SECRET_TOKEN}&v={time.time()}"
 
     # Start Flask in background thread
     flask_thread = threading.Thread(target=_start_flask, daemon=True)

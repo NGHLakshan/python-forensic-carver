@@ -1,8 +1,8 @@
 import os
 
 DRIVE_LETTER = 'E'
-CHUNK_SIZE = 50 * 1024 * 1024
-OVERLAP = 15 * 1024 * 1024
+CHUNK_SIZE = 64 * 1024 * 1024
+OVERLAP    =  2 * 1024 * 1024
 OLE_MAX_SIZE = 100 * 1024 * 1024 # extract up to 100MB 
 
 def main():

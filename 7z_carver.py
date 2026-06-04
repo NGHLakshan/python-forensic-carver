@@ -3,8 +3,8 @@ import struct
 
 # ⚠️ Set your USB drive letter here
 DRIVE_LETTER = 'E'
-CHUNK_SIZE = 50 * 1024 * 1024
-OVERLAP    = 10 * 1024 * 1024
+CHUNK_SIZE = 64 * 1024 * 1024
+OVERLAP    =  2 * 1024 * 1024
 SEVENZ_MAX_SIZE = 4 * 1024 * 1024 * 1024  # 4GB cap
 
 # 7-Zip signature: "7z" + 4 magic bytes

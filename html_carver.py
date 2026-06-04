@@ -1,8 +1,8 @@
 import os
 
 DRIVE_LETTER = 'E'
-CHUNK_SIZE = 15 * 1024 * 1024
-OVERLAP = 5 * 1024 * 1024
+CHUNK_SIZE = 64 * 1024 * 1024
+OVERLAP    =  2 * 1024 * 1024
 
 def main():
     print("1. Script Started...")
