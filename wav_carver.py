@@ -19,7 +19,7 @@ def main():
     os.makedirs(output_dir_wav, exist_ok=True)
     os.makedirs(output_dir_avi, exist_ok=True)
     
-    drive_path = f'\\\\.\\{DRIVE_LETTER}:'
+    drive_path = chr(92) + chr(92) + '.' + chr(92) + DRIVE_LETTER + ':'
     try:
         disk = open(drive_path, 'rb')
     except Exception as e:

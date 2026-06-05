@@ -332,14 +332,15 @@
             </div>
 
             <div style="margin-bottom: 1rem;">
-                <div class="section-label">Save Location (Optional)</div>
+                <div class="section-label" style="color: var(--warning);">⚠ Save Location <span
+                        style="color:var(--error);">(Required)</span></div>
                 <div style="display:flex; flex-direction:column; gap:0.5rem;">
                     <button id="browseBtn" type="button"
-                        style="padding: 0.6rem; background: var(--card-bg); border: 1px solid var(--border); color: var(--text); border-radius: 6px; font-weight: 600; cursor: pointer; transition: 0.2s;">📁
+                        style="padding: 0.6rem; background: var(--accent); border: none; color: #000; border-radius: 6px; font-weight: 700; cursor: pointer; transition: 0.2s;">📁
                         Choose Save Folder...</button>
-                    <input type="text" id="outputFolder"
+                    <input type="text" id="outputFolder" readonly
                         style="padding: 0.5rem; background: var(--bg); border: 1px solid var(--border); color: var(--text); border-radius: 6px; font-size: 0.75rem;"
-                        placeholder="Leave empty for default folder">
+                        placeholder="No folder selected — click button above">
                 </div>
             </div>
 
@@ -443,11 +444,36 @@
 
         async function startScan() {
             const drive = el.driveLetter.value.trim();
-            const output_folder = el.outputFolder.value.trim();
+            let output_folder = el.outputFolder.value.trim();
             const selected = [...document.querySelectorAll('input[name="carver"]:checked')].map(c => c.value);
 
             if (!drive) return alert('Enter drive letter');
             if (!selected.length) return alert('Select at least one file type');
+
+            // --- REQUIRE a save folder before starting ---
+            if (!output_folder) {
+                log('⚠ No save folder selected. Please choose a save folder first.', 'warn');
+                // Automatically open the folder picker
+                el.browseBtn.disabled = true;
+                try {
+                    const res2 = await secureFetch('/api/select_folder', { method: 'POST' });
+                    const data2 = await res2.json();
+                    if (data2.folder) {
+                        el.outputFolder.value = data2.folder;
+                        output_folder = data2.folder;
+                        log(`[*] Save folder set: ${output_folder}`, 'info');
+                    } else {
+                        log('❌ No folder selected. Scan cancelled.', 'err');
+                        el.browseBtn.disabled = false;
+                        return; // <-- Block scan if user cancelled
+                    }
+                } catch (err) {
+                    log('❌ Folder picker error. Scan cancelled.', 'err');
+                    el.browseBtn.disabled = false;
+                    return;
+                }
+                el.browseBtn.disabled = false;
+            }
 
             const res = await secureFetch('/api/scan/start', {
                 method: 'POST',
@@ -458,10 +484,11 @@
             if (res.ok) {
                 running = true;
                 el.startBtn.style.display = 'none'; el.stopBtn.style.display = 'flex';
-                el.statusText.innerText = `Scanning drive ${drive}: ...`;
+                el.statusText.innerText = `Scanning drive ${drive}: → Saving to: ${output_folder}`;
                 el.progressContainer.style.display = 'block';
                 el.progressBar.style.width = '100%';
                 el.logs.innerHTML = '';
+                log(`[*] Output folder: ${output_folder}`, 'info');
                 initSSE();
             } else { alert((await res.json()).error || 'Failed to start scan'); }
         }

@@ -90,6 +90,8 @@ _scan_state = {
 }
 
 _clients: list[queue.Queue] = []
+_log_buffer: list[dict] = []
+_LOG_BUFFER_MAX = 500
 
 # ══════════════════════════════════════════════════════════════════════════════
 # Endpoints
@@ -126,7 +128,8 @@ def select_folder():
         if not webview.windows:
             raise Exception("No active webview window found.")
         window = webview.windows[0]
-        folders = window.create_file_dialog(webview.FOLDER_DIALOG)
+        dialog_type = getattr(webview, 'FOLDER_DIALOG', None) or getattr(webview, 'FileDialog', type('', (), {'FOLDER': 1})).FOLDER
+        folders = window.create_file_dialog(dialog_type)
         
         dest_folder = folders[0] if folders and len(folders) > 0 else ""
         return jsonify({"folder": dest_folder})
@@ -168,6 +171,7 @@ def start_scan():
     })
     while not _scan_state["log_queue"].empty():
         _scan_state["log_queue"].get_nowait()
+    _log_buffer.clear()
     _push_log(f"[*] Starting scan on drive {drive}: — {len(selected)} file types", "info")
     for label, mod_name in selected:
         t = threading.Thread(target=_run_carver, args=(drive, label, mod_name), daemon=True)
@@ -197,6 +201,8 @@ def scan_status():
 def stream_logs():
     def event_stream():
         client_q = queue.Queue()
+        for buffered_msg in list(_log_buffer):
+            yield f"data: {json.dumps(buffered_msg)}\n\n"
         _clients.append(client_q)
         try:
             while True:
@@ -206,7 +212,8 @@ def stream_logs():
                 except queue.Empty:
                     yield ": ping\n\n"
         finally:
-            _clients.remove(client_q)
+            if client_q in _clients:
+                _clients.remove(client_q)
     return Response(event_stream(), mimetype="text/event-stream",
                     headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
 
@@ -215,6 +222,9 @@ def stream_logs():
 def _push_log(message: str, tag: str = "default"):
     payload = {"msg": message, "tag": tag, "ts": time.strftime("%H:%M:%S")}
     _scan_state["log_queue"].put(payload)
+    _log_buffer.append(payload)
+    if len(_log_buffer) > _LOG_BUFFER_MAX:
+        _log_buffer.pop(0)
     for cq in list(_clients):
         cq.put(payload)
 

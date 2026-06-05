@@ -10,7 +10,7 @@ def main():
     output_dir = "Recovered_RAR"
     os.makedirs(output_dir, exist_ok=True)
     
-    drive_path = f'\\\\.\\{DRIVE_LETTER}:'
+    drive_path = chr(92) + chr(92) + '.' + chr(92) + DRIVE_LETTER + ':'
     try:
         disk = open(drive_path, 'rb')
     except Exception as e:
