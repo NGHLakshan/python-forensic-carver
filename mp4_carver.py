@@ -47,7 +47,8 @@ def main():
             chunk = disk.read(CHUNK_SIZE)
             if not chunk: break
                 
-            if offset % (CHUNK_SIZE * 2) == 0:
+            chunk_idx = offset // max(1, (CHUNK_SIZE - OVERLAP))
+            if chunk_idx % 1 == 0:
                 print(f"[*] Scanning... Passed {offset / (1024*1024):.1f} MB...", flush=True)
 
             idx = 4

@@ -97,7 +97,8 @@ def main():
                 print("\n[*] End of drive reached successfully!")
                 break
                 
-            if offset % (CHUNK_SIZE * 5) == 0:
+            chunk_idx = offset // max(1, (CHUNK_SIZE - OVERLAP))
+            if chunk_idx % 1 == 0:
                 print(f"[*] Scanning... Passed {offset / (1024*1024):.1f} MB...", flush=True)
 
             idx = 0

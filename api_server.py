@@ -229,29 +229,34 @@ def _push_log(message: str, tag: str = "default"):
         cq.put(payload)
 
 
+_thread_local = threading.local()
+_original_print = builtins.print
+
+def _thread_safe_print(*args, **kwargs):
+    label = getattr(_thread_local, 'label', None)
+    if label:
+        msg = " ".join(str(a) for a in args)
+        tag = "ok" if "[+]" in msg else ("err" if "❌" in msg or "[!]" in msg else "default")
+        _push_log(f"[{label}] {msg}", tag)
+        if "[+]" in msg:
+            _scan_state["counts"][label] = _scan_state["counts"].get(label, 0) + 1
+    else:
+        _original_print(*args, **kwargs)
+
+builtins.print = _thread_safe_print
+
 def _run_carver(drive: str, label: str, mod_name: str):
-    original_print = builtins.print
+    _thread_local.label = label
     try:
         mod = importlib.import_module(mod_name)
         if hasattr(mod, "DRIVE_LETTER"):
             mod.DRIVE_LETTER = drive
 
-        def patched_print(*args, **kwargs):
-            msg = " ".join(str(a) for a in args)
-            tag = "ok" if "[+]" in msg else ("err" if "❌" in msg or "[!]" in msg else "default")
-            _push_log(f"[{label}] {msg}", tag)
-            if "[+]" in msg:
-                _scan_state["counts"][label] = _scan_state["counts"].get(label, 0) + 1
-
-        builtins.print = patched_print
-        try:
-            mod.main()
-        finally:
-            builtins.print = original_print
+        mod.main()
     except Exception as e:
-        builtins.print = original_print
         _push_log(f"[{label}] ❌ Error: {e}", "err")
-
+    finally:
+        _thread_local.label = None
 
 def _monitor_threads():
     for t in _scan_state["threads"]:
